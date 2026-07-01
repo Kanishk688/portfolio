@@ -1,30 +1,91 @@
 ---
-// Home page. Layout import kiya, ab uske andar content daalte hain.
+// HOME = asli landing page. 4 hisse: Hero, Featured Work, About, Contact.
 import Layout from '../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+// featured:true wale projects home page pe dikhenge.
+const all = await getCollection('projects');
+const featured = all
+  .filter((p) => p.data.featured)
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 ---
 
 <Layout title="Kanishk Verma — Illustrator">
-  <!--
-    class="..." = Tailwind styling. Har shabd ek design rule hai:
-    min-h-screen = poori screen height | flex items-center = beech me | p-8 = padding
-  -->
-  <main class="min-h-screen flex flex-col items-center justify-center gap-6 p-8 text-center">
+  <!-- ================= HERO ================= -->
+  <section class="max-w-6xl mx-auto px-6 pt-24 pb-20 text-center">
     <p class="text-sm font-semibold tracking-[0.3em] uppercase text-teal-400">
       Portfolio
     </p>
-
-    <h1 class="text-6xl md:text-8xl font-black leading-none">
+    <h1 class="text-6xl md:text-8xl font-black leading-none mt-4">
       <span class="bg-gradient-to-r from-teal-400 via-fuchsia-500 to-amber-400 bg-clip-text text-transparent">
         Kanishk Verma
       </span>
     </h1>
-
-    <p class="max-w-md text-lg text-neutral-300">
-      Illustrator &amp; AI-Illustration Artist — textbook illustration, character design, and more.
+    <p class="max-w-xl mx-auto text-lg text-neutral-300 mt-6">
+      Illustrator &amp; AI-Illustration Artist — I create clean, bright,
+      print-ready illustrations for children's textbooks and educational publishing.
     </p>
+    <div class="flex items-center justify-center gap-3 mt-8">
+      <a href="/work" class="rounded-full bg-white text-neutral-950 font-semibold px-6 py-3 text-sm hover:opacity-90 transition">
+        View my work →
+      </a>
+      <a href="#contact" class="rounded-full border border-neutral-700 px-6 py-3 text-sm text-neutral-200 hover:border-neutral-500 transition">
+        Get in touch
+      </a>
+    </div>
+  </section>
 
-    <span class="rounded-full border border-neutral-700 px-5 py-2 text-sm text-neutral-400">
-      ✨ Work coming soon
-    </span>
-  </main>
+  <!-- ================= FEATURED WORK ================= -->
+  <section class="max-w-6xl mx-auto px-6 py-16 border-t border-neutral-900">
+    <div class="flex items-end justify-between mb-8">
+      <h2 class="text-3xl font-black">Featured work</h2>
+      <a href="/work" class="text-sm text-neutral-400 hover:text-white transition">See all →</a>
+    </div>
+
+    <div class="grid gap-6 sm:grid-cols-2">
+      {featured.map((p) => (
+        <a href={`/work/${p.id}`} class="group rounded-2xl overflow-hidden border border-neutral-800 bg-neutral-900 hover:border-neutral-600 transition block">
+          <img
+            src={p.data.cover}
+            alt={p.data.title}
+            class="aspect-[16/10] w-full object-cover group-hover:scale-105 transition duration-300"
+          />
+          <div class="p-5">
+            <h3 class="font-bold text-lg">{p.data.title}</h3>
+            <p class="text-sm text-neutral-400 mt-2 line-clamp-2">{p.data.summary}</p>
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <!-- ================= ABOUT ================= -->
+  <section class="max-w-6xl mx-auto px-6 py-16 border-t border-neutral-900">
+    <h2 class="text-3xl font-black mb-6">About</h2>
+    <div class="grid md:grid-cols-3 gap-8">
+      <p class="md:col-span-2 text-lg text-neutral-300 leading-relaxed">
+        I'm Kanishk — an illustrator working at the intersection of hand-crafted
+        editorial style and modern AI tools. I specialise in bright, clean,
+        curriculum-ready artwork: chapter openers, science diagrams, scenes and
+        recurring characters. Recently I illustrated complete Grade&nbsp;3 and
+        Grade&nbsp;4 science textbooks — among the first AI-illustrated textbooks
+        in the region.
+      </p>
+      <ul class="text-sm text-neutral-400 space-y-3">
+        <li><span class="text-neutral-200 font-semibold block">Focus</span> Educational &amp; editorial illustration</li>
+        <li><span class="text-neutral-200 font-semibold block">Tools</span> AI generation, upscaling, print-prep</li>
+        <li><span class="text-neutral-200 font-semibold block">Available for</span> Textbook &amp; publishing projects</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ================= CONTACT ================= -->
+  <section id="contact" class="max-w-6xl mx-auto px-6 py-24 border-t border-neutral-900 text-center">
+    <h2 class="text-3xl md:text-4xl font-black">Let's work together</h2>
+    <p class="text-neutral-300 mt-3">Have a book or a project in mind? I'd love to hear about it.</p>
+    <a href="mailto:kanishkverma688@gmail.com"
+       class="inline-block mt-6 rounded-full bg-gradient-to-r from-teal-400 to-fuchsia-500 text-neutral-950 font-bold px-8 py-3 hover:opacity-90 transition">
+      kanishkverma688@gmail.com
+    </a>
+  </section>
 </Layout>
