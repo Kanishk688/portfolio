@@ -2,39 +2,119 @@
 import Layout from '../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
 
-// getCollection = "projects" folder ki saari files uthao.
 const projects = await getCollection('projects');
-// naye kaam upar dikhein isliye date se ulta sort karte hain.
 projects.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+// har project ke tags se filter-categories nikaalo (slugs).
+function catsFor(tags: string[]): string[] {
+  const cats: string[] = [];
+  if (tags.some((t) => /science/i.test(t))) cats.push('science');
+  if (tags.some((t) => /english/i.test(t))) cats.push('english');
+  for (const t of tags) {
+    const m = t.match(/grade\s*(\d+)/i);
+    if (m) cats.push('grade-' + m[1]);
+  }
+  return cats;
+}
+
+const withCats = projects.map((p) => ({ p, cats: catsFor(p.data.tags) }));
+
+// kaunse filter-chips dikhane hain (sirf jo maujood hain).
+const has = (c: string) => withCats.some((x) => x.cats.includes(c));
+const chips = [
+  { slug: 'all', label: 'All' },
+  { slug: 'science', label: 'Science' },
+  { slug: 'english', label: 'English' },
+  { slug: 'grade-1', label: 'Grade 1' },
+  { slug: 'grade-2', label: 'Grade 2' },
+  { slug: 'grade-3', label: 'Grade 3' },
+  { slug: 'grade-4', label: 'Grade 4' },
+].filter((c) => c.slug === 'all' || has(c.slug));
 ---
 
 <Layout title="Work — Kanishk Verma">
   <main class="max-w-6xl mx-auto px-6 py-16">
-    <h1 class="text-5xl font-black mb-2">Work</h1>
-    <p class="text-neutral-400 mb-10">Selected illustration projects.</p>
+    <h1 class="reveal text-5xl font-black mb-2">Work</h1>
+    <p class="reveal text-neutral-400 mb-8">Selected illustration projects.</p>
 
-    <!-- Har project ka card. map() = list me har item ke liye ek card banao. -->
-    <ul class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {projects.map((p) => (
-        <li class="group rounded-2xl overflow-hidden border border-neutral-800 bg-neutral-900 hover:border-neutral-600 transition">
-          <a href={`/work/${p.id}`} class="block">
-          <img
-            src={p.data.cover}
-            alt={p.data.title}
-            class="aspect-[4/3] w-full object-cover group-hover:scale-105 transition duration-300"
-          />
-          <div class="p-5">
-            <h2 class="font-bold text-lg leading-snug">{p.data.title}</h2>
-            <p class="text-sm text-neutral-400 mt-2 line-clamp-2">{p.data.summary}</p>
-            <div class="flex flex-wrap gap-2 mt-3">
-              {p.data.tags.map((t) => (
-                <span class="text-xs rounded-full bg-neutral-800 text-neutral-300 px-2.5 py-1">{t}</span>
-              ))}
-            </div>
-          </div>
-          </a>
-        </li>
+    <!-- FILTER CHIPS -->
+    <div id="filters" class="reveal flex flex-wrap gap-2 mb-10">
+      {chips.map((c, i) => (
+        <button
+          type="button"
+          data-filter={c.slug}
+          class:list={[
+            'filter-chip text-sm rounded-full px-4 py-1.5 border transition',
+            i === 0
+              ? 'is-active bg-white text-neutral-950 border-white font-semibold'
+              : 'bg-neutral-900 text-neutral-300 border-neutral-700 hover:border-neutral-500',
+          ]}
+        >
+          {c.label}
+        </button>
       ))}
-    </ul>
+    </div>
+
+    <!-- MASONRY: CSS columns; har card break-inside-avoid taaki toote na. -->
+    <div id="grid" class="columns-1 sm:columns-2 lg:columns-3 gap-6">
+      {withCats.map(({ p, cats }) => (
+        <div class="project-card reveal mb-6 break-inside-avoid" data-cats={cats.join(' ')}>
+          <a href={`/work/${p.id}`} class="group block rounded-2xl overflow-hidden border border-neutral-800 bg-neutral-900 hover:border-neutral-600 hover:-translate-y-1 transition">
+            <div class="overflow-hidden">
+              <img
+                src={p.data.cover}
+                alt={p.data.title}
+                loading="lazy"
+                class="w-full object-cover group-hover:scale-105 transition duration-500"
+              />
+            </div>
+            <div class="p-5">
+              <h2 class="font-bold text-lg leading-snug">{p.data.title}</h2>
+              <p class="text-sm text-neutral-400 mt-2 line-clamp-2">{p.data.summary}</p>
+              <div class="flex flex-wrap gap-2 mt-3">
+                {p.data.tags.map((t) => (
+                  <span class="text-xs rounded-full bg-neutral-800 text-neutral-300 px-2.5 py-1">{t}</span>
+                ))}
+              </div>
+            </div>
+          </a>
+        </div>
+      ))}
+    </div>
+
+    <p id="empty" class="hidden text-neutral-500 text-center py-16">No projects in this filter yet.</p>
   </main>
+
+  <script>
+    function setupFilters() {
+      const chips = document.querySelectorAll<HTMLButtonElement>('.filter-chip');
+      const cards = document.querySelectorAll<HTMLElement>('.project-card');
+      const empty = document.getElementById('empty');
+      if (!chips.length) return;
+
+      function apply(slug: string) {
+        let shown = 0;
+        cards.forEach((card) => {
+          const cats = (card.dataset.cats || '').split(' ');
+          const show = slug === 'all' || cats.includes(slug);
+          card.style.display = show ? '' : 'none';
+          if (show) shown++;
+        });
+        if (empty) empty.classList.toggle('hidden', shown > 0);
+      }
+
+      chips.forEach((chip) => {
+        chip.addEventListener('click', () => {
+          chips.forEach((c) => {
+            c.classList.remove('is-active', 'bg-white', 'text-neutral-950', 'border-white', 'font-semibold');
+            c.classList.add('bg-neutral-900', 'text-neutral-300', 'border-neutral-700');
+          });
+          chip.classList.add('is-active', 'bg-white', 'text-neutral-950', 'border-white', 'font-semibold');
+          chip.classList.remove('bg-neutral-900', 'text-neutral-300', 'border-neutral-700');
+          apply(chip.dataset.filter || 'all');
+        });
+      });
+    }
+    document.addEventListener('astro:page-load', setupFilters);
+  </script>
 </Layout>

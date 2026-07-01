@@ -1,12 +1,15 @@
 ---
 // COMMON DHAANCHA — har page isko use karega.
-// global.css yahan import kiya to Tailwind poori site pe chalu ho jata hai.
 import '../styles/global.css';
-// Header component import kiya — neeche <body> me lagayenge.
 import Header from '../components/Header.astro';
+// ClientRouter = Astro ka View-Transitions. Isse ek page se doosre pe jaate
+// waqt smooth fade/slide hota hai (full reload nahi dikhta).
+import { ClientRouter } from 'astro:transitions';
 
-// "Props" = page se aane wali cheezein. Yahan page apna title bhejta hai.
-const { title = 'Kanishk Verma — Illustrator' } = Astro.props;
+const {
+  title = 'Kanishk Verma — Illustrator',
+  description = 'Illustrator & AI-illustration artist — clean, bright, print-ready artwork for children’s textbooks and educational publishing.',
+} = Astro.props;
 ---
 
 <!doctype html>
@@ -15,11 +18,42 @@ const { title = 'Kanishk Verma — Illustrator' } = Astro.props;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
+    <meta name="description" content={description} />
+    <!-- share/preview -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <!-- emoji favicon (no file needed) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>" />
+    <ClientRouter />
   </head>
   <body class="bg-neutral-950 text-white antialiased">
-    <!-- Menu bar sabse upar -->
     <Header />
-    <!-- <slot /> = yahan page ka asli content aa jayega -->
     <slot />
+
+    <!-- SCROLL REVEAL: jaise hi koi .reveal element screen me aata hai, use dikhao. -->
+    <script>
+      function setupReveal() {
+        const els = document.querySelectorAll('.reveal:not(.in)');
+        if (!('IntersectionObserver' in window)) {
+          els.forEach((el) => el.classList.add('in'));
+          return;
+        }
+        const io = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((e) => {
+              if (e.isIntersecting) {
+                e.target.classList.add('in');
+                io.unobserve(e.target);
+              }
+            });
+          },
+          { threshold: 0.12, rootMargin: '0px 0px -8% 0px' }
+        );
+        els.forEach((el) => io.observe(el));
+      }
+      // pehli load pe bhi chale, aur har page-transition ke baad bhi.
+      document.addEventListener('astro:page-load', setupReveal);
+    </script>
   </body>
 </html>

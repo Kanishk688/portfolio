@@ -1,55 +1,122 @@
 ---
-// HOME = asli landing page. 4 hisse: Hero, Featured Work, About, Contact.
+// HOME = asli landing page. Hero (+marquee+stats), Featured, About, Contact.
 import Layout from '../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
 
-// featured:true wale projects home page pe dikhenge.
 const all = await getCollection('projects');
 const featured = all
   .filter((p) => p.data.featured)
   .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+// ---- STATS (asli ginti gallery se) ----
+const bookCount = all.length;
+let imgCount = 0;
+const chapterSet = new Set<string>();
+const marqueeAll: string[] = [];
+for (const p of all) {
+  for (const it of p.data.gallery) {
+    imgCount++;
+    const src = typeof it === 'string' ? it : it.src;
+    marqueeAll.push(src);
+    if (typeof it !== 'string' && it.chapter) chapterSet.add(p.id + '::' + it.chapter);
+  }
+}
+const chapterCount = chapterSet.size;
+// round-down thoda "+" ke saath dikhane ke liye
+const imgRounded = Math.floor(imgCount / 10) * 10;
+
+// ---- MARQUEE ke liye ~28 images ka spread (har jagah se) ----
+const step = Math.max(1, Math.floor(marqueeAll.length / 28));
+const picks = marqueeAll.filter((_, i) => i % step === 0).slice(0, 28);
+const rowA = picks.filter((_, i) => i % 2 === 0);
+const rowB = picks.filter((_, i) => i % 2 === 1);
+
+const stats = [
+  { n: bookCount, label: 'Books illustrated' },
+  { n: chapterCount, label: 'Chapters & units' },
+  { n: imgRounded + '+', label: 'Illustrations' },
+];
 ---
 
 <Layout title="Kanishk Verma — Illustrator">
   <!-- ================= HERO ================= -->
-  <section class="max-w-6xl mx-auto px-6 pt-24 pb-20 text-center">
-    <p class="text-sm font-semibold tracking-[0.3em] uppercase text-teal-400">
-      Portfolio
-    </p>
-    <h1 class="text-6xl md:text-8xl font-black leading-none mt-4">
-      <span class="bg-gradient-to-r from-teal-400 via-fuchsia-500 to-amber-400 bg-clip-text text-transparent">
-        Kanishk Verma
-      </span>
-    </h1>
-    <p class="max-w-xl mx-auto text-lg text-neutral-300 mt-6">
-      Illustrator &amp; AI-Illustration Artist — I create clean, bright,
-      print-ready illustrations for children's textbooks and educational publishing.
-    </p>
-    <div class="flex items-center justify-center gap-3 mt-8">
-      <a href="/work" class="rounded-full bg-white text-neutral-950 font-semibold px-6 py-3 text-sm hover:opacity-90 transition">
-        View my work →
-      </a>
-      <a href="#contact" class="rounded-full border border-neutral-700 px-6 py-3 text-sm text-neutral-200 hover:border-neutral-500 transition">
-        Get in touch
-      </a>
+  <section class="relative overflow-hidden">
+    <!-- soft glow background -->
+    <div class="pointer-events-none absolute inset-0 -z-10">
+      <div class="absolute -top-32 left-1/2 -translate-x-1/2 h-[42rem] w-[42rem] rounded-full bg-fuchsia-600/20 blur-[120px]"></div>
+      <div class="absolute top-24 -right-24 h-[28rem] w-[28rem] rounded-full bg-teal-500/20 blur-[120px]"></div>
+    </div>
+
+    <div class="max-w-6xl mx-auto px-6 pt-24 pb-14 text-center">
+      <p class="reveal text-sm font-semibold tracking-[0.3em] uppercase text-teal-400">
+        Illustrator · Educational &amp; Editorial
+      </p>
+      <h1 class="reveal d1 text-6xl md:text-8xl font-black leading-none mt-5">
+        <span class="shimmer bg-gradient-to-r from-teal-300 via-fuchsia-400 to-amber-300 bg-clip-text text-transparent">
+          Kanishk Verma
+        </span>
+      </h1>
+      <p class="reveal d2 max-w-xl mx-auto text-lg text-neutral-300 mt-6">
+        I create clean, bright, print-ready illustrations for children’s
+        textbooks and educational publishing — openers, diagrams, scenes and
+        recurring characters.
+      </p>
+      <div class="reveal d3 flex items-center justify-center gap-3 mt-8">
+        <a href="/work" class="rounded-full bg-white text-neutral-950 font-semibold px-6 py-3 text-sm hover:opacity-90 hover:-translate-y-0.5 transition">
+          View my work →
+        </a>
+        <a href="#contact" class="rounded-full border border-neutral-700 px-6 py-3 text-sm text-neutral-200 hover:border-neutral-400 hover:-translate-y-0.5 transition">
+          Get in touch
+        </a>
+      </div>
+
+      <!-- STATS -->
+      <div class="reveal d3 mt-14 flex flex-wrap items-center justify-center gap-x-12 gap-y-6">
+        {stats.map((s) => (
+          <div>
+            <div class="text-4xl md:text-5xl font-black bg-gradient-to-b from-white to-neutral-400 bg-clip-text text-transparent">{s.n}</div>
+            <div class="text-xs uppercase tracking-widest text-neutral-500 mt-1">{s.label}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <!-- ARTWORK MARQUEE (do rows) -->
+    <div class="space-y-4 py-6">
+      <div class="marquee">
+        <div class="marquee-track marquee-l">
+          {[...rowA, ...rowA].map((src) => (
+            <img src={src} alt="" loading="lazy" class="h-28 md:h-36 w-auto rounded-xl border border-neutral-800 object-cover" />
+          ))}
+        </div>
+      </div>
+      <div class="marquee">
+        <div class="marquee-track marquee-r">
+          {[...rowB, ...rowB].map((src) => (
+            <img src={src} alt="" loading="lazy" class="h-28 md:h-36 w-auto rounded-xl border border-neutral-800 object-cover" />
+          ))}
+        </div>
+      </div>
     </div>
   </section>
 
   <!-- ================= FEATURED WORK ================= -->
   <section class="max-w-6xl mx-auto px-6 py-16 border-t border-neutral-900">
     <div class="flex items-end justify-between mb-8">
-      <h2 class="text-3xl font-black">Featured work</h2>
-      <a href="/work" class="text-sm text-neutral-400 hover:text-white transition">See all →</a>
+      <h2 class="reveal text-3xl font-black">Featured work</h2>
+      <a href="/work" class="reveal text-sm text-neutral-400 hover:text-white transition">See all →</a>
     </div>
 
     <div class="grid gap-6 sm:grid-cols-2">
-      {featured.map((p) => (
-        <a href={`/work/${p.id}`} class="group rounded-2xl overflow-hidden border border-neutral-800 bg-neutral-900 hover:border-neutral-600 transition block">
-          <img
-            src={p.data.cover}
-            alt={p.data.title}
-            class="aspect-[16/10] w-full object-cover group-hover:scale-105 transition duration-300"
-          />
+      {featured.map((p, i) => (
+        <a href={`/work/${p.id}`} class={`reveal ${i % 2 ? 'd1' : ''} group rounded-2xl overflow-hidden border border-neutral-800 bg-neutral-900 hover:border-neutral-600 hover:-translate-y-1 transition block`}>
+          <div class="overflow-hidden">
+            <img
+              src={p.data.cover}
+              alt={p.data.title}
+              class="aspect-[16/10] w-full object-cover group-hover:scale-105 transition duration-500"
+            />
+          </div>
           <div class="p-5">
             <h3 class="font-bold text-lg">{p.data.title}</h3>
             <p class="text-sm text-neutral-400 mt-2 line-clamp-2">{p.data.summary}</p>
@@ -61,17 +128,16 @@ const featured = all
 
   <!-- ================= ABOUT ================= -->
   <section class="max-w-6xl mx-auto px-6 py-16 border-t border-neutral-900">
-    <h2 class="text-3xl font-black mb-6">About</h2>
+    <h2 class="reveal text-3xl font-black mb-6">About</h2>
     <div class="grid md:grid-cols-3 gap-8">
-      <p class="md:col-span-2 text-lg text-neutral-300 leading-relaxed">
-        I'm Kanishk — an illustrator working at the intersection of hand-crafted
+      <p class="reveal md:col-span-2 text-lg text-neutral-300 leading-relaxed">
+        I’m Kanishk — an illustrator working at the intersection of hand-crafted
         editorial style and modern AI tools. I specialise in bright, clean,
         curriculum-ready artwork: chapter openers, science diagrams, scenes and
-        recurring characters. Recently I illustrated complete Grade&nbsp;3 and
-        Grade&nbsp;4 science textbooks — among the first AI-illustrated textbooks
-        in the region.
+        recurring characters. I’ve illustrated complete science and English
+        readers end to end — among the first AI-illustrated textbooks in the region.
       </p>
-      <ul class="text-sm text-neutral-400 space-y-3">
+      <ul class="reveal d1 text-sm text-neutral-400 space-y-3">
         <li><span class="text-neutral-200 font-semibold block">Focus</span> Educational &amp; editorial illustration</li>
         <li><span class="text-neutral-200 font-semibold block">Tools</span> AI generation, upscaling, print-prep</li>
         <li><span class="text-neutral-200 font-semibold block">Available for</span> Textbook &amp; publishing projects</li>
@@ -81,10 +147,10 @@ const featured = all
 
   <!-- ================= CONTACT ================= -->
   <section id="contact" class="max-w-6xl mx-auto px-6 py-24 border-t border-neutral-900 text-center">
-    <h2 class="text-3xl md:text-4xl font-black">Let's work together</h2>
-    <p class="text-neutral-300 mt-3">Have a book or a project in mind? I'd love to hear about it.</p>
+    <h2 class="reveal text-3xl md:text-4xl font-black">Let’s work together</h2>
+    <p class="reveal d1 text-neutral-300 mt-3">Have a book or a project in mind? I’d love to hear about it.</p>
     <a href="mailto:kanishkverma688@gmail.com"
-       class="inline-block mt-6 rounded-full bg-gradient-to-r from-teal-400 to-fuchsia-500 text-neutral-950 font-bold px-8 py-3 hover:opacity-90 transition">
+       class="reveal d2 inline-block mt-6 rounded-full bg-gradient-to-r from-teal-400 to-fuchsia-500 text-neutral-950 font-bold px-8 py-3 hover:opacity-90 hover:-translate-y-0.5 transition">
       kanishkverma688@gmail.com
     </a>
   </section>

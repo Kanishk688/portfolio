@@ -1,1 +1,35 @@
 @import "tailwindcss";
+
+/* anchor links (#contact) pe smooth scroll */
+html { scroll-behavior: smooth; }
+
+/* ===== SCROLL REVEAL =====
+   .reveal element pehle chhupa (halka neeche + transparent),
+   jab screen me aata hai to JS '.in' laga deta hai -> smoothly upar aa ke dikhta hai. */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal { opacity: 0; transform: translateY(26px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1); }
+  .reveal.in { opacity: 1; transform: none; }
+  /* thoda-thoda der se aane ke liye delay helpers */
+  .reveal.d1 { transition-delay: .08s; }
+  .reveal.d2 { transition-delay: .16s; }
+  .reveal.d3 { transition-delay: .24s; }
+}
+
+/* ===== HERO NAAM KA SHIMMER ===== */
+@keyframes shimmer { to { background-position: 200% center; } }
+.shimmer {
+  background-size: 200% auto;
+  animation: shimmer 6s linear infinite;
+}
+
+/* ===== MARQUEE (artwork ki chalti hui patti) ===== */
+@keyframes marquee-l { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes marquee-r { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+.marquee { overflow: hidden; -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent); mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent); }
+.marquee-track { display: flex; width: max-content; gap: 1rem; }
+.marquee-l { animation: marquee-l 50s linear infinite; }
+.marquee-r { animation: marquee-r 50s linear infinite; }
+.marquee:hover .marquee-l, .marquee:hover .marquee-r { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .marquee-l, .marquee-r { animation: none; }
+}

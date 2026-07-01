@@ -2,28 +2,22 @@
 import Layout from '../../layouts/Layout.astro';
 import { getCollection, render } from 'astro:content';
 
-// getStaticPaths = Astro ko batao "kaun-kaun se pages banane hain".
-// Har project ke liye ek page. slug = us project ka address (file ka naam).
 export async function getStaticPaths() {
   const projects = await getCollection('projects');
   return projects.map((p) => ({
-    params: { slug: p.id },   // URL ka hissa, e.g. /work/jaipuria-science-textbook
-    props: { project: p },    // us page ko poora project data de do
+    params: { slug: p.id },
+    props: { project: p },
   }));
 }
 
-// Upar se aaya hua project data.
 const { project } = Astro.props;
-// render() = markdown ke neeche wale text ko HTML me badalta hai.
 const { Content } = await render(project);
 
-// gallery ke har item ko ek jaisa {src, chapter, caption} bana lete hain
-// (kabhi wo sirf string hota hai, kabhi object).
 const items = project.data.gallery.map((g) =>
   typeof g === 'string' ? { src: g, chapter: undefined, caption: undefined } : g
 );
 
-// chapter ke hisaab se group karo, aur order wahi rakho jaise likha hai.
+// chapter ke hisaab se group karo, order wahi rakho jaise likha hai.
 const groups: { chapter: string; images: typeof items }[] = [];
 for (const it of items) {
   const key = it.chapter ?? '';
@@ -31,44 +25,45 @@ for (const it of items) {
   if (!g) { g = { chapter: key, images: [] }; groups.push(g); }
   g.images.push(it);
 }
+
+// har image ko ek flat index do (lightbox next/prev ke liye).
+let idx = 0;
 ---
 
-<Layout title={`${project.data.title} — Kanishk Verma`}>
+<Layout title={`${project.data.title} — Kanishk Verma`} description={project.data.summary}>
   <main class="max-w-5xl mx-auto px-6 py-16">
-    <!-- Wapas jaane ka link -->
-    <a href="/work" class="text-sm text-neutral-400 hover:text-white transition">← Back to Work</a>
+    <a href="/work" class="reveal text-sm text-neutral-400 hover:text-white transition">← Back to Work</a>
 
-    <!-- Title + summary -->
-    <h1 class="text-4xl md:text-5xl font-black mt-6">{project.data.title}</h1>
-    <p class="text-lg text-neutral-300 mt-3 max-w-2xl">{project.data.summary}</p>
+    <h1 class="reveal text-4xl md:text-5xl font-black mt-6">{project.data.title}</h1>
+    <p class="reveal d1 text-lg text-neutral-300 mt-3 max-w-2xl">{project.data.summary}</p>
 
-    <!-- Tags -->
-    <div class="flex flex-wrap gap-2 mt-4">
+    <div class="reveal d1 flex flex-wrap gap-2 mt-4">
       {project.data.tags.map((t) => (
         <span class="text-xs rounded-full bg-neutral-800 text-neutral-300 px-2.5 py-1">{t}</span>
       ))}
     </div>
 
-    <!-- Markdown body (file ke neeche wala likha hua text) -->
-    <div class="prose prose-invert mt-8 max-w-2xl text-neutral-300">
+    <div class="reveal d2 prose prose-invert mt-8 max-w-2xl text-neutral-300">
       <Content />
     </div>
 
-    <!-- GALLERY = chapter ke hisaab se. Image pe click = zoom (lightbox) -->
+    <!-- GALLERY = chapter-wise masonry. Image pe click = pro lightbox. -->
     {groups.map((group) => (
       <section class="mt-14">
         {group.chapter && (
-          <h2 class="text-xl md:text-2xl font-bold border-l-4 border-teal-400 pl-3 mb-6">
+          <h2 class="reveal text-xl md:text-2xl font-bold border-l-4 border-teal-400 pl-3 mb-6">
             {group.chapter}
           </h2>
         )}
-        <div class="grid gap-6 sm:grid-cols-2">
+        <div class="columns-1 sm:columns-2 gap-6">
           {group.images.map((img) => (
-            <figure class="group">
+            <figure class="reveal mb-6 break-inside-avoid group">
               <img
                 src={img.src}
                 alt={img.caption ?? project.data.title}
-                class="lightbox-img w-full rounded-xl border border-neutral-800 cursor-zoom-in hover:opacity-90 transition"
+                data-idx={idx++}
+                data-caption={img.caption ?? ''}
+                class="lightbox-img w-full rounded-xl border border-neutral-800 cursor-zoom-in group-hover:brightness-110 group-hover:-translate-y-0.5 transition"
                 loading="lazy"
               />
               {img.caption && (
@@ -81,25 +76,78 @@ for (const it of items) {
     ))}
   </main>
 
-  <!-- LIGHTBOX = poori screen wala zoom. Kisi bhi gallery image pe click karo to khulta hai. -->
-  <div id="lightbox" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/90 p-4 cursor-zoom-out">
-    <img id="lightbox-img" src="" alt="" class="max-h-[90vh] max-w-[90vw] rounded-lg" />
+  <!-- ===== PRO LIGHTBOX ===== -->
+  <div id="lightbox" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/92 backdrop-blur-sm select-none">
+    <!-- band karne ka cross -->
+    <button id="lb-close" aria-label="Close" class="absolute top-4 right-5 text-white/70 hover:text-white text-3xl leading-none">×</button>
+    <!-- prev -->
+    <button id="lb-prev" aria-label="Previous" class="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-white/10 hover:bg-white/20 text-white text-2xl grid place-items-center">‹</button>
+    <!-- image + caption -->
+    <figure class="max-h-[90vh] max-w-[92vw] flex flex-col items-center gap-3">
+      <img id="lb-img" src="" alt="" class="max-h-[80vh] max-w-[92vw] rounded-lg object-contain" />
+      <figcaption class="text-center text-sm text-neutral-300 max-w-2xl px-4">
+        <span id="lb-cap"></span>
+        <span id="lb-count" class="block text-xs text-neutral-500 mt-1"></span>
+      </figcaption>
+    </figure>
+    <!-- next -->
+    <button id="lb-next" aria-label="Next" class="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-white/10 hover:bg-white/20 text-white text-2xl grid place-items-center">›</button>
   </div>
 
-  <script is:inline>
-    const box = document.getElementById('lightbox');
-    const boxImg = document.getElementById('lightbox-img');
-    // har gallery image pe click lagao
-    document.querySelectorAll('.lightbox-img').forEach((el) => {
-      el.addEventListener('click', () => {
-        boxImg.src = el.src;
-        box.classList.remove('hidden');
-        box.classList.add('flex');
+  <script>
+    function setupLightbox() {
+      const box = document.getElementById('lightbox');
+      const img = document.getElementById('lb-img') as HTMLImageElement | null;
+      const cap = document.getElementById('lb-cap');
+      const count = document.getElementById('lb-count');
+      if (!box || !img || !cap || !count) return;
+
+      // saari gallery images ek array me (DOM order = data-idx order).
+      const els = Array.from(document.querySelectorAll<HTMLImageElement>('.lightbox-img'));
+      const list = els.map((el) => ({ src: el.src, caption: el.dataset.caption || '' }));
+      let cur = 0;
+
+      function show(i: number) {
+        cur = (i + list.length) % list.length; // wrap-around
+        img!.src = list[cur].src;
+        cap!.textContent = list[cur].caption;
+        count!.textContent = `${cur + 1} / ${list.length}`;
+      }
+      function open(i: number) {
+        show(i);
+        box!.classList.remove('hidden');
+        box!.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+      }
+      function close() {
+        box!.classList.add('hidden');
+        box!.classList.remove('flex');
+        document.body.style.overflow = '';
+      }
+
+      els.forEach((el, i) => el.addEventListener('click', () => open(i)));
+      document.getElementById('lb-close')?.addEventListener('click', close);
+      document.getElementById('lb-prev')?.addEventListener('click', (e) => { e.stopPropagation(); show(cur - 1); });
+      document.getElementById('lb-next')?.addEventListener('click', (e) => { e.stopPropagation(); show(cur + 1); });
+      // overlay (image ke bahar) click = band
+      box.addEventListener('click', (e) => { if (e.target === box) close(); });
+
+      // keyboard
+      document.addEventListener('keydown', (e) => {
+        if (box.classList.contains('hidden')) return;
+        if (e.key === 'Escape') close();
+        else if (e.key === 'ArrowLeft') show(cur - 1);
+        else if (e.key === 'ArrowRight') show(cur + 1);
       });
-    });
-    // overlay pe click ya Escape dabao to band
-    function closeBox() { box.classList.add('hidden'); box.classList.remove('flex'); boxImg.src = ''; }
-    box.addEventListener('click', closeBox);
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeBox(); });
+
+      // mobile swipe
+      let sx = 0;
+      box.addEventListener('touchstart', (e) => { sx = e.changedTouches[0].clientX; }, { passive: true });
+      box.addEventListener('touchend', (e) => {
+        const dx = e.changedTouches[0].clientX - sx;
+        if (Math.abs(dx) > 45) show(cur + (dx < 0 ? 1 : -1));
+      }, { passive: true });
+    }
+    document.addEventListener('astro:page-load', setupLightbox);
   </script>
 </Layout>
