@@ -1,0 +1,24 @@
+# dependencies (npm install se dobara ban jaate hain)
+node_modules/
+
+# build output (astro build se dobara ban jaata hai)
+dist/
+
+# astro ke andar ki cache/generated files
+.astro/
+
+# environment secrets (kabhi bhoolke bhi push mat karna)
+.env
+.env.production
+
+# logs aur OS ki bekaar files
+*.log
+.DS_Store
+Thumbs.db
+
+# editor
+.vscode/
+.idea/
+
+# playwright screenshots (test ke temp files)
+.playwright-mcp/

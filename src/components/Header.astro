@@ -1,0 +1,39 @@
+---
+// HEADER = site ka top menu bar. Har page pe dikhega (Layout me lagega).
+
+// Astro.url.pathname = abhi kaunse page pe ho, e.g. "/" ya "/work".
+// Isse hum active link ko highlight karenge.
+const path = Astro.url.pathname;
+
+// Menu ke links ki list. Naya page banao to yahan ek line add karna.
+const links = [
+  { href: '/', label: 'Home' },
+  { href: '/work', label: 'Work' },
+];
+---
+
+<header class="sticky top-0 z-50 backdrop-blur bg-neutral-950/70 border-b border-neutral-800">
+  <nav class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+    <!-- Baayein: naam/logo. Click karo to Home. -->
+    <a href="/" class="font-black tracking-tight text-lg hover:opacity-80 transition">
+      Kanishk<span class="text-teal-400">.</span>
+    </a>
+
+    <!-- Daayein: menu links -->
+    <ul class="flex items-center gap-6 text-sm">
+      {links.map((l) => (
+        <li>
+          <a
+            href={l.href}
+            class:list={[
+              'transition hover:text-white',
+              path === l.href ? 'text-white font-semibold' : 'text-neutral-400',
+            ]}
+          >
+            {l.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+</header>

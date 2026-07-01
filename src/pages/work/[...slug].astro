@@ -1,0 +1,54 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection, render } from 'astro:content';
+
+// getStaticPaths = Astro ko batao "kaun-kaun se pages banane hain".
+// Har project ke liye ek page. slug = us project ka address (file ka naam).
+export async function getStaticPaths() {
+  const projects = await getCollection('projects');
+  return projects.map((p) => ({
+    params: { slug: p.id },   // URL ka hissa, e.g. /work/jaipuria-science-textbook
+    props: { project: p },    // us page ko poora project data de do
+  }));
+}
+
+// Upar se aaya hua project data.
+const { project } = Astro.props;
+// render() = markdown ke neeche wale text ko HTML me badalta hai.
+const { Content } = await render(project);
+---
+
+<Layout title={`${project.data.title} — Kanishk Verma`}>
+  <main class="max-w-5xl mx-auto px-6 py-16">
+    <!-- Wapas jaane ka link -->
+    <a href="/work" class="text-sm text-neutral-400 hover:text-white transition">← Back to Work</a>
+
+    <!-- Title + summary -->
+    <h1 class="text-4xl md:text-5xl font-black mt-6">{project.data.title}</h1>
+    <p class="text-lg text-neutral-300 mt-3 max-w-2xl">{project.data.summary}</p>
+
+    <!-- Tags -->
+    <div class="flex flex-wrap gap-2 mt-4">
+      {project.data.tags.map((t) => (
+        <span class="text-xs rounded-full bg-neutral-800 text-neutral-300 px-2.5 py-1">{t}</span>
+      ))}
+    </div>
+
+    <!-- Markdown body (file ke neeche wala likha hua text) -->
+    <div class="prose prose-invert mt-8 max-w-2xl text-neutral-300">
+      <Content />
+    </div>
+
+    <!-- GALLERY = saari images ek grid me -->
+    <div class="grid gap-4 sm:grid-cols-2 mt-12">
+      {project.data.gallery.map((img) => (
+        <img
+          src={img}
+          alt={project.data.title}
+          class="w-full rounded-xl border border-neutral-800"
+          loading="lazy"
+        />
+      ))}
+    </div>
+  </main>
+</Layout>

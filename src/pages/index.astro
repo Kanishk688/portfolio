@@ -1,0 +1,30 @@
+---
+// Home page. Layout import kiya, ab uske andar content daalte hain.
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Kanishk Verma — Illustrator">
+  <!--
+    class="..." = Tailwind styling. Har shabd ek design rule hai:
+    min-h-screen = poori screen height | flex items-center = beech me | p-8 = padding
+  -->
+  <main class="min-h-screen flex flex-col items-center justify-center gap-6 p-8 text-center">
+    <p class="text-sm font-semibold tracking-[0.3em] uppercase text-teal-400">
+      Portfolio
+    </p>
+
+    <h1 class="text-6xl md:text-8xl font-black leading-none">
+      <span class="bg-gradient-to-r from-teal-400 via-fuchsia-500 to-amber-400 bg-clip-text text-transparent">
+        Kanishk Verma
+      </span>
+    </h1>
+
+    <p class="max-w-md text-lg text-neutral-300">
+      Illustrator &amp; AI-Illustration Artist — textbook illustration, character design, and more.
+    </p>
+
+    <span class="rounded-full border border-neutral-700 px-5 py-2 text-sm text-neutral-400">
+      ✨ Work coming soon
+    </span>
+  </main>
+</Layout>

@@ -1,0 +1,25 @@
+---
+// COMMON DHAANCHA — har page isko use karega.
+// global.css yahan import kiya to Tailwind poori site pe chalu ho jata hai.
+import '../styles/global.css';
+// Header component import kiya — neeche <body> me lagayenge.
+import Header from '../components/Header.astro';
+
+// "Props" = page se aane wali cheezein. Yahan page apna title bhejta hai.
+const { title = 'Kanishk Verma — Illustrator' } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+  </head>
+  <body class="bg-neutral-950 text-white antialiased">
+    <!-- Menu bar sabse upar -->
+    <Header />
+    <!-- <slot /> = yahan page ka asli content aa jayega -->
+    <slot />
+  </body>
+</html>
