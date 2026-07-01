@@ -16,6 +16,21 @@ export async function getStaticPaths() {
 const { project } = Astro.props;
 // render() = markdown ke neeche wale text ko HTML me badalta hai.
 const { Content } = await render(project);
+
+// gallery ke har item ko ek jaisa {src, chapter, caption} bana lete hain
+// (kabhi wo sirf string hota hai, kabhi object).
+const items = project.data.gallery.map((g) =>
+  typeof g === 'string' ? { src: g, chapter: undefined, caption: undefined } : g
+);
+
+// chapter ke hisaab se group karo, aur order wahi rakho jaise likha hai.
+const groups: { chapter: string; images: typeof items }[] = [];
+for (const it of items) {
+  const key = it.chapter ?? '';
+  let g = groups.find((x) => x.chapter === key);
+  if (!g) { g = { chapter: key, images: [] }; groups.push(g); }
+  g.images.push(it);
+}
 ---
 
 <Layout title={`${project.data.title} — Kanishk Verma`}>
@@ -39,17 +54,31 @@ const { Content } = await render(project);
       <Content />
     </div>
 
-    <!-- GALLERY = saari images ek grid me. Image pe click = zoom (lightbox) -->
-    <div class="grid gap-4 sm:grid-cols-2 mt-12">
-      {project.data.gallery.map((img) => (
-        <img
-          src={img}
-          alt={project.data.title}
-          class="lightbox-img w-full rounded-xl border border-neutral-800 cursor-zoom-in hover:opacity-90 transition"
-          loading="lazy"
-        />
-      ))}
-    </div>
+    <!-- GALLERY = chapter ke hisaab se. Image pe click = zoom (lightbox) -->
+    {groups.map((group) => (
+      <section class="mt-14">
+        {group.chapter && (
+          <h2 class="text-xl md:text-2xl font-bold border-l-4 border-teal-400 pl-3 mb-6">
+            {group.chapter}
+          </h2>
+        )}
+        <div class="grid gap-6 sm:grid-cols-2">
+          {group.images.map((img) => (
+            <figure class="group">
+              <img
+                src={img.src}
+                alt={img.caption ?? project.data.title}
+                class="lightbox-img w-full rounded-xl border border-neutral-800 cursor-zoom-in hover:opacity-90 transition"
+                loading="lazy"
+              />
+              {img.caption && (
+                <figcaption class="text-sm text-neutral-400 mt-2 leading-snug">{img.caption}</figcaption>
+              )}
+            </figure>
+          ))}
+        </div>
+      </section>
+    ))}
   </main>
 
   <!-- LIGHTBOX = poori screen wala zoom. Kisi bhi gallery image pe click karo to khulta hai. -->
