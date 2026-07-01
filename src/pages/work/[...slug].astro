@@ -39,16 +39,38 @@ const { Content } = await render(project);
       <Content />
     </div>
 
-    <!-- GALLERY = saari images ek grid me -->
+    <!-- GALLERY = saari images ek grid me. Image pe click = zoom (lightbox) -->
     <div class="grid gap-4 sm:grid-cols-2 mt-12">
       {project.data.gallery.map((img) => (
         <img
           src={img}
           alt={project.data.title}
-          class="w-full rounded-xl border border-neutral-800"
+          class="lightbox-img w-full rounded-xl border border-neutral-800 cursor-zoom-in hover:opacity-90 transition"
           loading="lazy"
         />
       ))}
     </div>
   </main>
+
+  <!-- LIGHTBOX = poori screen wala zoom. Kisi bhi gallery image pe click karo to khulta hai. -->
+  <div id="lightbox" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/90 p-4 cursor-zoom-out">
+    <img id="lightbox-img" src="" alt="" class="max-h-[90vh] max-w-[90vw] rounded-lg" />
+  </div>
+
+  <script is:inline>
+    const box = document.getElementById('lightbox');
+    const boxImg = document.getElementById('lightbox-img');
+    // har gallery image pe click lagao
+    document.querySelectorAll('.lightbox-img').forEach((el) => {
+      el.addEventListener('click', () => {
+        boxImg.src = el.src;
+        box.classList.remove('hidden');
+        box.classList.add('flex');
+      });
+    });
+    // overlay pe click ya Escape dabao to band
+    function closeBox() { box.classList.add('hidden'); box.classList.remove('flex'); boxImg.src = ''; }
+    box.addEventListener('click', closeBox);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeBox(); });
+  </script>
 </Layout>
