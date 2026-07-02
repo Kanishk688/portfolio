@@ -1,0 +1,8 @@
+{
+  // Cloudflare Workers static-assets config (Astro ka `dist` folder serve karega).
+  "name": "kannisshk",
+  "compatibility_date": "2026-06-01",
+  "assets": {
+    "directory": "./dist"
+  }
+}
