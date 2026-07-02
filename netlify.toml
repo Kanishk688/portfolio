@@ -1,0 +1,5 @@
+# Site ab Cloudflare Pages pe host hai (kannisshk.pages.dev).
+# Netlify ko har push pe build SKIP karne ko bolte hain taaki credits na jalein.
+# `ignore = "exit 0"` => Netlify sochta hai "koi change nahi" aur build cancel kar deta hai.
+[build]
+  ignore = "exit 0"
